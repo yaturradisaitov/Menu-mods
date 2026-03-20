@@ -22,10 +22,15 @@ end
 
 -- ===== ФУНКЦИЯ ПРОВЕРКИ ССЫЛКИ =====
 local function isValidRobloxLink(link)
+    if not link then return false end
+
     link = string.lower(link)
-    return string.find(link, "roblox.com/games/") 
-        or string.find(link, "roblox.com/share") 
-        or string.find(link, "roblox://")
+
+    if string.find(link, "roblox") then
+        return true
+    end
+
+    return false
 end
 
 -- ===== GUI =====
