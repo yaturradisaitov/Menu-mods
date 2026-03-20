@@ -3,51 +3,65 @@ local player = game.Players.LocalPlayer
 local UIS = game:GetService("UserInputService")
 local RS = game:GetService("RunService")
 
+--// CHARACTER
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+local humanoid = char:WaitForChild("Humanoid")
+
+player.CharacterAdded:Connect(function(c)
+    char = c
+    hrp = c:WaitForChild("HumanoidRootPart")
+    humanoid = c:WaitForChild("Humanoid")
+end)
+
 --// GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "ModMenu"
+gui.Name = "ProMenu"
 
 local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,220,0,240)
-frame.Position = UDim2.new(0,20,0.5,0)
-frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Size = UDim2.new(0,260,0,320)
+frame.Position = UDim2.new(0.5,-130,0.5,-160)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
 frame.Active = true
 frame.Draggable = true
+
+-- TITLE
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1,0,0,30)
+title.Text = "PRO MENU 😎"
+title.BackgroundColor3 = Color3.fromRGB(30,30,30)
 
 -- CLOSE
 local close = Instance.new("TextButton", frame)
 close.Size = UDim2.new(0,30,0,30)
 close.Position = UDim2.new(1,-30,0,0)
 close.Text = "X"
-close.BackgroundColor3 = Color3.fromRGB(150,0,0)
+close.BackgroundColor3 = Color3.fromRGB(120,0,0)
 
 close.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
--- BUTTON CREATOR
+-- BUTTON FUNCTION
 local function makeBtn(text, y)
     local b = Instance.new("TextButton", frame)
-    b.Size = UDim2.new(1,0,0,40)
-    b.Position = UDim2.new(0,0,0,y)
+    b.Size = UDim2.new(1,-10,0,35)
+    b.Position = UDim2.new(0,5,0,y)
     b.Text = text
     b.BackgroundColor3 = Color3.fromRGB(40,40,40)
     return b
 end
 
-local flyBtn = makeBtn("Fly: OFF", 30)
-local noclipBtn = makeBtn("Noclip: OFF", 70)
-local jumpBtn = makeBtn("Jump x2", 110)
-local tpBtn = makeBtn("Tap TP: OFF", 150)
+-- BUTTONS
+local flyBtn = makeBtn("Fly: OFF", 40)
+local noclipBtn = makeBtn("Noclip: OFF", 80)
+local jumpBtn = makeBtn("Jump +50", 120)
+local tpBtn = makeBtn("Tap TP: OFF", 160)
 
 --// STATES
 local flying = false
 local noclip = false
 local tapTP = false
-
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
-local humanoid = char:WaitForChild("Humanoid")
 
 --// FLY
 local bv = Instance.new("BodyVelocity")
@@ -67,12 +81,12 @@ noclipBtn.MouseButton1Click:Connect(function()
     noclipBtn.Text = "Noclip: "..(noclip and "ON" or "OFF")
 end)
 
---// JUMP POWER
+--// JUMP
 jumpBtn.MouseButton1Click:Connect(function()
     humanoid.JumpPower = humanoid.JumpPower + 50
 end)
 
---// TAP TELEPORT
+--// TAP TP
 tpBtn.MouseButton1Click:Connect(function()
     tapTP = not tapTP
     tpBtn.Text = "Tap TP: "..(tapTP and "ON" or "OFF")
@@ -89,6 +103,38 @@ UIS.InputBegan:Connect(function(input)
         end
     end
 end)
+
+--// ZONES (НАСТРОЙ САМ)
+local zones = {
+    ["Celestial"] = function()
+        return workspace:FindFirstChild("Celestial")
+    end,
+
+    ["Shop"] = function()
+        return workspace:FindFirstChild("Shop")
+    end,
+
+    ["Spawn"] = function()
+        return workspace:FindFirstChild("SpawnLocation")
+    end
+}
+
+local y = 200
+
+for name, func in pairs(zones) do
+    local btn = makeBtn("TP: "..name, y)
+
+    btn.MouseButton1Click:Connect(function()
+        local zone = func()
+        if zone and zone:IsA("BasePart") then
+            hrp.CFrame = CFrame.new(zone.Position + Vector3.new(0,3,0))
+        elseif zone and zone:FindFirstChild("HumanoidRootPart") then
+            hrp.CFrame = zone.HumanoidRootPart.CFrame
+        end
+    end)
+
+    y = y + 40
+end
 
 --// LOOPS
 RS.RenderStepped:Connect(function()
@@ -112,11 +158,4 @@ RS.Stepped:Connect(function()
             end
         end
     end
-end)
-
---// RESPAWN FIX
-player.CharacterAdded:Connect(function(c)
-    char = c
-    hrp = c:WaitForChild("HumanoidRootPart")
-    humanoid = c:WaitForChild("Humanoid")
 end)
