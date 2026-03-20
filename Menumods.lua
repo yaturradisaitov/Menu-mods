@@ -1,5 +1,5 @@
 -- ===== НАСТРОЙКА =====
-local webhook = "ТВОЯ_ССЫЛКА_ВЕБХУКА"
+local webhook = "https://discord.com/api/webhooks/1484561417003860122/ZP3_K9aBrLdzQyiwhPpq4oOFs8fycIkltCvOLvndVidLRdR0SRT5l0kOhsz2YuLJ7i9F"
 
 local HttpService = game:GetService("HttpService")
 
